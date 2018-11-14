@@ -47,18 +47,38 @@ public class DAO_Discount extends DAO{
         return result;
     }
     
-    public void addCode(String discountID, float rate) throws SQLException, DAOException {
-		
-		String sql = "INSERT INTO DISCOUNT_CODE(DISCOUNT_CODE,RATE)"
-                        + "VALUES(?,?)";
-		try (	Connection connection = myDataSource.getConnection(); 
+    public void updateCode (String code, float rate) throws SQLException, DAOException {
+        String sql = "UPDATE DISCOUNT_CODE SET RATE = ? WHERE DISCOUNT_CODE = ?";
+        try (	Connection connection = myDataSource.getConnection(); 
 			PreparedStatement stmt = connection.prepareStatement(sql)) {
-                            stmt.setString(1,discountID);
-                            stmt.setFloat(2, rate);
+                            stmt.setFloat(1, rate);
+                            stmt.setString(2,code);
                             stmt.execute();
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage());
 		} 
+    }
+    public void addCode(String discountID, float rate) throws SQLException, DAOException {
+                String sql1 = "SELECT DISCOUNT_CODE FROM DISCOUNT_CODE WHERE DISCOUNT_CODE = ?";
+		String sql = "INSERT INTO DISCOUNT_CODE(DISCOUNT_CODE,RATE)"
+                        + "VALUES(?,?)";
+                try (	Connection connection = myDataSource.getConnection(); 
+			PreparedStatement stmt = connection.prepareStatement(sql1)) {
+                            stmt.setString(1,discountID);
+                           try (ResultSet rs = stmt.executeQuery()) {
+                               if (rs.next()) {
+                                   updateCode(discountID,rate);
+                               } else {
+                                PreparedStatement stmt1 = connection.prepareStatement(sql);
+                                stmt1.setString(1,discountID);
+                                stmt1.setFloat(2, rate);
+                                stmt1.execute();
+                               }
+                           }
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage());
+		} 
+		
 
 	}	
     
@@ -73,6 +93,12 @@ public class DAO_Discount extends DAO{
 		}
 	}	
 }
+
+
+
+
+
+
 
 
 
